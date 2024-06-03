@@ -8,7 +8,7 @@
 </head>
 
 <body>
-    <h1>Product List</h1>
+    <h1>Python - Challenge --- Product List</h1>
 
     <button onclick="listAllProducts()">List All Products</button>
     <button onclick="listBestSellerProducts()">List Best Seller Products</button>
@@ -34,30 +34,49 @@
         async function listBestRatedProducts() {
             const rating = parseFloat(prompt("Enter minimum rating:"));
             const response = await fetch(`/list_best_rated_products?rating=${rating}`);
-            const data = await response.json();
-            displayProducts(data);
+            if (response.status == 200) {
+                const data = await response.json();
+                displayProducts(data);
+            }
+            else {
+                clear_screen();
+                const textItem = document.createElement("p");
+                textItem.textContent = "No products found with given criteria";
+                productList.appendChild(textItem);
+            }
         }
         async function listProductsByName() {
             const name = prompt("Enter the full name or part of the name:");
             const response = await fetch(`/get_product_by_name?name=${encodeURIComponent(name)}`);
-            const data = await response.json();
-            displayProducts(data);
+            if (response.status == 200) {
+                const data = await response.json();
+                displayProducts(data);
+            }
+            else {
+                clear_screen();
+                const textItem = document.createElement("p");
+                textItem.textContent = "No products found with given criteria";
+                productList.appendChild(textItem);
+            }
         }
 
         function displayProducts(products) {
-            const productList = document.getElementById("productList");
-            productList.innerHTML = ""; // Clear previous list
-            console.log(products);
+            clear_screen();
             products = JSON.parse(products)
             products.forEach(product => {
                 const listItem = document.createElement("li");
-                console.log(product.best_seller, " ", Object.keys(product));
                 const best_seller = product.best_seller === true ? "Yes" : "No";
 
                 listItem.textContent = `Name: ${product.name}, Price: R$${product.price.toFixed(2)}, Best Seller: ${best_seller}, Rating: ${product.rating}`;
                 productList.appendChild(listItem);
             });
         }
+        function clear_screen() {
+            const productList = document.getElementById("productList");
+            productList.innerHTML = ""; // Clear previous list
+
+        }
+
     </script>
 
 </body>
