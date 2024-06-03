@@ -24,6 +24,6 @@ class Product:
         return {
             "name": self.name,
             "price": self.price,
-            "best seller": "Yes" if self.best_seller else "No",
+            "best_seller": self.best_seller,
             "rating": self.rating,
         }

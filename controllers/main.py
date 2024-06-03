@@ -1,10 +1,13 @@
-"""Main component from controleer"""
+"""Main component from controller"""
 
+import logging
 from typing import List
 from bs4 import BeautifulSoup, NavigableString, ResultSet
-
 from models.product import Product
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class Controller:
     """App controller class"""
@@ -16,15 +19,16 @@ class Controller:
         if not cls._instance:
             cls._instance = super(Controller, cls).__new__(cls, *args, **kwargs)
             cls._raw_products = cls._fill_products()
+            logger.info(f"Products loaded.")
         return cls._instance
 
     def list_products(self, **kwargs):
-        """Method responsable to read and parser the content page and return the list of products.
-        If best sellers argument is given the list will contains only the best sellers
-        If rating argument is given, the list will contains only products with rating higher than the value passed
-        If name or part of the name was given, the list will return the list with products with the given name 
+        """Method responsible to read and parse the content page and return the list of products.
+        If best sellers argument is given, the list will contain only the best sellers.
+        If rating argument is given, the list will contain only products with a rating higher than the value passed.
+        If name or part of the name is given, the list will return the list with products with the given name.
         Args:
-            best_seller(bool): flags if the list will be a fulfilled with best seller products or all products
+            best_seller (bool): Flag if the list will be fulfilled with best seller products or all products.
         """
         products = []
         for raw_product in self._raw_products:
@@ -46,44 +50,45 @@ class Controller:
             else:
                 products.append(product.to_json())
 
-        # This should return the list of products
+        # Log the parsed products for debugging
+        logger.info(f"Parsed products: {products}")
         return products
-    
+
+    @staticmethod
     def _fill_products():
-        """Read and parse the html to find the products"""
-        # Read html
-        with open("pages/content.html", "r", encoding="utf-8") as e_commerce_html:
+        """Read and parse the HTML to find the products"""
+        try:
+            with open("pages/content.html", "r", encoding="utf-8") as e_commerce_html:
+                soup = BeautifulSoup(e_commerce_html.read(), "html.parser")
+                raw_products = soup.findAll(
+                    "div",
+                    {
+                        "class": "sg-col-4-of-12 s-result-item s-asin sg-col-4-of-16 sg-col sg-col-4-of-20"
+                    },
+                )
+                logger.info(f"Raw products found.")
+                return raw_products
+        except FileNotFoundError:
+            logger.error("Error: content.html file not found.")
+            return []
 
-            # Parse html
-            soup = BeautifulSoup(e_commerce_html.read(), "html.parser")
-
-            raw_products = soup.findAll(
-                "div",
-                {
-                    "class": "sg-col-4-of-12 s-result-item s-asin sg-col-4-of-16 sg-col sg-col-4-of-20"
-                },
-            )
-            return raw_products
-
-    def _is_best_seller(self, product: NavigableString) -> bool:
-        """Analize the product if it is a best seller
-
+    @staticmethod
+    def _is_best_seller(product: NavigableString) -> bool:
+        """Analyze the product to see if it is a best seller
         Args:
-            product (NavigableString): the product that will be analized
-
+            product (NavigableString): The product to be analyzed
         Returns:
-            bool: indicate if the product is a best seller
+            bool: Indicates if the product is a best seller
         """
         return product.find("span", {"class": "a-badge-text"}) is not None
 
-    def _get_name(self, product: NavigableString) -> str:
-        """Extract and return the name from the product
-
+    @staticmethod
+    def _get_name(product: NavigableString) -> str:
+        """Extract and return the name of the product
         Args:
-            product (NavigableString): the product that will be analized
-
+            product (NavigableString): The product to be analyzed
         Returns:
-            str: the formated name of the product
+            str: The formatted name of the product
         """
         return " ".join(
             product.find(
@@ -91,16 +96,14 @@ class Controller:
             ).text.split()
         )
 
-    def _get_price(self, product: NavigableString) -> float:
-        """Extract the price from the product
-
+    @staticmethod
+    def _get_price(product: NavigableString) -> float:
+        """Extract the price of the product
         Args:
-            product (NavigableString): the product that will be analized
-
+            product (NavigableString): The product to be analyzed
         Returns:
-            float: the price of the product
+            float: The price of the product
         """
-
         integer_price = float(
             product.find("span", {"class": "a-price-whole"})
             .text.replace(",", "")
@@ -112,18 +115,16 @@ class Controller:
 
         return integer_price + fraction_price
 
-    def _get_rating(self, product: NavigableString) -> float:
-        """Extract the rating from the product
-
+    @staticmethod
+    def _get_rating(product: NavigableString) -> float:
+        """Extract the rating of the product
         Args:
-            product (NavigableString):  the product that will be analized
-
+            product (NavigableString): The product to be analyzed
         Returns:
-            float: the rating  of the product
+            float: The rating of the product
         """
         raw_rating = product.find("a", {"class": "a-popover-trigger a-declarative"})
         rating = float(raw_rating.text.split(" de 5")[0].replace(",", "."))
         return rating
-
 
 controller = Controller()

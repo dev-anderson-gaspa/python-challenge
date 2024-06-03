@@ -18,7 +18,8 @@
                 "--port",
                 "8000",
                 "--reload"
-            ],
+            ], 
+            "justMyCode": false,
             "env": {
                 "PYTHONPATH": "${workspaceFolder}" 
             }
