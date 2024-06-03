@@ -1,0 +1,7 @@
+# Environments
+env/
+venv/
+
+# Distribution / packaging
+.Python
+__pycache__/
