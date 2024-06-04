@@ -1,1 +1,1 @@
-from .main import controller
+from .product_controller import controller

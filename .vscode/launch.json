@@ -12,7 +12,7 @@
             "console": "integratedTerminal",
             "args": [
                 "run",
-                "app.main:app",
+                "routes.routes:app",
                 "--host",
                 "127.0.0.1",
                 "--port",

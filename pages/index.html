@@ -14,69 +14,97 @@
     <button onclick="listBestSellerProducts()">List Best Seller Products</button>
     <button onclick="listBestRatedProducts()">List Best Rated Products</button>
     <button onclick="listProductsByName()">List Products By Name</button>
+    <button onclick="listProductsByCriteria()">List Products By Criteria</button>
 
     <ul id="productList"></ul>
 
 
     <script>
         async function listAllProducts() {
-            const response = await fetch('/list_products');
-            const data = await response.json();
-            displayProducts(data);
+            const response = await fetch('/products');
+            if (response.ok) {
+                const data = await response.json();
+                displayProducts(data);
+            } else {
+                handleErrorResponse();
+            }
         }
 
         async function listBestSellerProducts() {
-            const response = await fetch('/list_best_seller');
-            const data = await response.json();
-            displayProducts(data);
+            const response = await fetch('/products?best_seller=true');
+            if (response.ok) {
+                const data = await response.json();
+                displayProducts(data);
+            } else {
+                handleErrorResponse();
+            }
         }
 
         async function listBestRatedProducts() {
             const rating = parseFloat(prompt("Enter minimum rating:"));
-            const response = await fetch(`/list_best_rated_products?rating=${rating}`);
-            if (response.status == 200) {
+            const response = await fetch(`/products?rating=${rating}`);
+            if (response.ok) {
                 const data = await response.json();
                 displayProducts(data);
-            }
-            else {
-                clear_screen();
-                const textItem = document.createElement("p");
-                textItem.textContent = "No products found with given criteria";
-                productList.appendChild(textItem);
+            } else {
+                handleErrorResponse();
             }
         }
+
         async function listProductsByName() {
             const name = prompt("Enter the full name or part of the name:");
-            const response = await fetch(`/get_product_by_name?name=${encodeURIComponent(name)}`);
-            if (response.status == 200) {
+            const response = await fetch(`/products/${encodeURIComponent(name)}`);
+            if (response.ok) {
+                const data = await response.json();
+                displayProducts([data]); // Wrap single product in array for compatibility
+            } else {
+                handleErrorResponse();
+            }
+        }
+
+        async function listProductsByCriteria() {
+            const best_seller = confirm("Do you want to filter by best seller?");
+            const rating = parseFloat(prompt("Enter minimum rating:"));
+
+            let url = '/products';
+            if (best_seller) {
+                url += `?best_seller=true`;
+            }
+            if (!isNaN(rating)) {
+                url += `${best_seller ? '&' : '?'}rating=${rating}`;
+            }
+
+            const response = await fetch(url);
+            if (response.ok) {
                 const data = await response.json();
                 displayProducts(data);
-            }
-            else {
-                clear_screen();
-                const textItem = document.createElement("p");
-                textItem.textContent = "No products found with given criteria";
-                productList.appendChild(textItem);
+            } else {
+                handleErrorResponse();
             }
         }
 
         function displayProducts(products) {
             clear_screen();
-            products = JSON.parse(products)
             products.forEach(product => {
                 const listItem = document.createElement("li");
-                const best_seller = product.best_seller === true ? "Yes" : "No";
+                const best_seller = product.best_seller ? "Yes" : "No";
 
                 listItem.textContent = `Name: ${product.name}, Price: R$${product.price.toFixed(2)}, Best Seller: ${best_seller}, Rating: ${product.rating}`;
                 productList.appendChild(listItem);
             });
         }
+
         function clear_screen() {
             const productList = document.getElementById("productList");
             productList.innerHTML = ""; // Clear previous list
-
         }
 
+        function handleErrorResponse() {
+            clear_screen();
+            const textItem = document.createElement("p");
+            textItem.textContent = "No products found with given criteria";
+            productList.appendChild(textItem);
+        }
     </script>
 
 </body>
